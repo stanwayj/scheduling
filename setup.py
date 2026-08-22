@@ -3,8 +3,8 @@
 
 from setuptools import setup, find_packages
 
-setup(name="telescope_scheduler",
-      version="2026.7",
+setup(name="scheduler",
+      version="2026.8",
       description="Software to schedule telescope observations",
       long_description=open("README.md", "rt").read(),
       long_description_content_type='text/markdown',
@@ -15,7 +15,7 @@ setup(name="telescope_scheduler",
           "matplotlib",
           "click",
           "pandas",
-          "astropy"  
+          "astropy",  
           "astroplan"],
 
       author="J.S.Stanway",
