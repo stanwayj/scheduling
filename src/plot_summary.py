@@ -52,7 +52,6 @@ def plot_histo_dec(fname):
     fig, ax = plt.subplots(1,1, figsize=(8,6))
 
     ax.hist(histo_list, bins=36, stacked=True, color=color_list, label=label_list) 
-            #color=['crimson', 'navy', 'dodgerblue'], label = ['UU', 'KUNTUR', 'AWEOWEO'])
 
     ax.set_ylabel("Count")
     ax.set_xlabel("RA [degrees]")
