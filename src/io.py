@@ -22,6 +22,6 @@ def load_csv(fname):
     df['dec2000'] = np.rad2deg(df['dec2000'])
 
     # Sort array by instrument and priority
-    df = df.sort_values(by=['instrument', 'tagpriority'])
+    df = df.sort_values(by=['tagpriority', 'remaining'], ascending=[True, False])
 
     return df
