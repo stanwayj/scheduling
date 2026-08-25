@@ -28,4 +28,7 @@ def load_csv(fname, remove_zeros=False):
     if remove_zeros:
         df = df[df.remaining > 0]
 
+    # Reset index
+    df = df.reset_index()
+
     return df
