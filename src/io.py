@@ -30,7 +30,7 @@ def load_csv(fname, remove_zeros=False):
         df = df[df.remaining > 0]
 
     # Reset index
-    df = df.reset_index()
+    df = df.reset_index(drop=True)
 
     return df
 
