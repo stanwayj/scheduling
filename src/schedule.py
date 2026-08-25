@@ -46,8 +46,32 @@ def construct_blocks(fname, exposure_time, read_out_time):
         
     return blocks   
 
+def check_schedule(fname):
 
-# TODO: Plotting! 
+    ## Load Config File ##
+    config = load_config(fname)
+
+    df_data = load_csv(config['data']['path'], remove_zeros=True)
+    df_schedule = pd.read_csv("./data_out/schedule.csv", sep=',')
+    df_schedule = df_schedule[df_schedule['target'] != "TransitionBlock"]
+    df_schedule = df_schedule.reset_index(drop=True)
+
+    if df_data.shape[0] != df_schedule.shape[0]:
+        print("Targets Missing! Saving list of missing targets to csv...")
+
+        planned_targets = df_data[['target']]
+        scheduled_targets = df_schedule[['target']]
+
+        merged = df_data.merge(df_schedule, on='target', how='outer', indicator=True)
+        missing_targets = merged[merged['_merge'] == 'left_only']
+        missing_targets = missing_targets.drop(columns=['_merge'])
+
+        missing_targets.to_csv("./data_out/missing_targets.csv", index=False)
+        
+    else:
+        print("All targets in schedule!")
+
+# TODO: Improve plotting 
 def schedule(fname):
 
     ## Load Config File ##
@@ -93,7 +117,10 @@ def schedule(fname):
     df_out = priority_schedule.to_table().to_pandas()
     df_out.to_csv("./data_out/schedule.csv", index=False)
 
-    ######### Plot schedule
+    ## Check if all targets are in the schedule
+    check_schedule(fname)
+
+    ## Plot schedule
     plt.figure(figsize = (14,6))
     plot_schedule_airmass(priority_schedule)
     plt.legend(loc = "upper right")
