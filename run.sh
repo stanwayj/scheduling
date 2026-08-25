@@ -13,7 +13,7 @@ if [[ "$argument" == "clean" ]]; then
     echo "Cleaning data and plot directories"
     rm "./plots"/*
     rm "./data_in"/*
-    rm "./data_out/*
+    rm "./data_out"/*
     exit 1
 fi
 # Make directory for plots
