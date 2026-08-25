@@ -19,7 +19,7 @@ setup(name="scheduler",
           "astroplan",
           "csv",
           "sys",
-          "PyYAML"],
+          "yaml"],
 
       author="J.S.Stanway",
       packages=find_packages(),
