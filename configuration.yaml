@@ -1,7 +1,7 @@
 ## Telescope Configuration ##
 
 data:
-  path: "./data_in/26BPI-remainingobservations.csv"
+  path: "./example_data/26BPI-remainingobservations.csv"
 
 observations:
   start_date: "2026-08-06 18:00"    # Start date and time of observations
