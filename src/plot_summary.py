@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-from src import load_csv
+from src import *
 
 """
 Produces a vareity of plots for all scheduled observations
@@ -68,9 +68,11 @@ if __name__ == "__main__":
 
     # Check if arguments were actually passed
     if len(sys.argv) > 1:
-        data = sys.argv[1]
+        config_path = sys.argv[1]
     else:
         print("No arguments were provided.")
 
-    plot_histo_instrument(data)
-    plot_histo_dec(data)
+    config = load_config(config_path)
+
+    plot_histo_instrument(config['data']['path'])
+    plot_histo_dec(config['data']['path'])
