@@ -23,6 +23,7 @@ Builds schedule from input data
 """
 
 # This currently assumes lower values of ``tagpriority`` is higher priority
+# TODO: add tagadj overwriting tagpriority
 def construct_blocks(fname, exposure_time, read_out_time):
 
     df = load_csv(fname, remove_zeros=True)
@@ -47,10 +48,7 @@ def construct_blocks(fname, exposure_time, read_out_time):
         
     return blocks   
 
-def check_schedule(fname):
-
-    ## Load Config File ##
-    config = load_config(fname)
+def check_schedule(config):
 
     df_data = load_csv(config['data']['path'], remove_zeros=True)
     df_schedule = pd.read_csv("./data_out/schedule.csv", sep=',')
@@ -86,7 +84,7 @@ def schedule(fname):
     end_time = Time(config['observations']['end_date'], format='iso')
 
     ## Global Constraints ##
-    # TODO: add options for more/less constraints from parameter file
+    # TODO: add options for more/less constraints from parameter file, as a seperate function
     global_constraints = [AltitudeConstraint(min=30*u.degree, max=85*u.degree),
                           AirmassConstraint(max = 3, boolean_constraint = False),
                           LocalTimeConstraint(min=datetime.time(00,00), max=datetime.time(12,00))]
@@ -118,8 +116,8 @@ def schedule(fname):
     df_out = priority_schedule.to_table().to_pandas()
     df_out.to_csv("./data_out/schedule.csv", index=False)
 
-    ## Check if all targets are in the schedule
-    check_schedule(fname)
+    ## Check if all targets are in the schedule, save any that cannot be fit into the schedule
+    check_schedule(config)
 
     ## Plot schedule
     plt.figure(figsize = (14,6))
