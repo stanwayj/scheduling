@@ -9,7 +9,7 @@ def get_delimiter(file_path, bytes = 4096):
     delimiter = sniffer.sniff(data).delimiter
     return delimiter
 
-def load_csv(fname):
+def load_csv(fname, remove_zeros=False):
 
     delimiter = get_delimiter(fname)
     df = pd.read_csv(fname, sep=delimiter)
@@ -23,5 +23,9 @@ def load_csv(fname):
 
     # Sort array by instrument and priority
     df = df.sort_values(by=['tagpriority', 'remaining'], ascending=[True, False])
+
+    # Remove any rows where ``remaining'' is less than or equal to zero
+    if remove_zeros:
+        df = df[df.remaining > 0]
 
     return df
