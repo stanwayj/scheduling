@@ -25,7 +25,7 @@ Builds schedule from input data
 def construct_blocks(fname, exposure_time, read_out_time):
 
     df = load_csv(fname, remove_zeros=True)
-
+    
     blocks = []
     for index, row in df.iterrows():
         # Define variables we need from the dataframe 
@@ -86,8 +86,9 @@ def schedule(fname, start, end, site='jcmt'):
     priority_schedule = Schedule(start_time, end_time)
     prior_scheduler(blocks, priority_schedule)
 
-    # Save a copy in some human readable format
-    print(priority_schedule.to_table(show_unused=False).to_pandas())
+    # Convert to Pandas Dataframe and save as csv
+    df_out = priority_schedule.to_table().to_pandas()
+    df_out.to_csv("./data_out/schedule.csv", index=False)
 
     ######### Plot schedule
     plt.figure(figsize = (14,6))
@@ -95,5 +96,5 @@ def schedule(fname, start, end, site='jcmt'):
     plt.legend(loc = "upper right")
     plt.show()
 
-schedule("./data/26BPI-remainingobservations.csv", '2026-08-06 19:00', '2026-08-10 19:00')
+schedule("./data_in/26BPI-remainingobservations.csv", '2026-08-06 19:00', '2026-08-10 19:00')
  
