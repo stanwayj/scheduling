@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
+import sys
 
 from src import *
 
@@ -126,4 +127,13 @@ def schedule(fname):
     plt.legend(loc = "upper right")
     plt.show()
 
-schedule("./configuration.yaml")
+
+if __name__ == "__main__":  
+
+    # Check if arguments were actually passed
+    if len(sys.argv) > 1:
+        config_path = sys.argv[1]
+    else:
+        print("No arguments were provided.")
+
+    schedule(config_path)

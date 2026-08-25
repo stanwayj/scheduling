@@ -16,6 +16,7 @@ if [[ "$argument" == "clean" ]]; then
     rm "./data_out"/*
     exit 1
 fi
+
 # Make directory for plots
 PLOTS_DIR="plots"
 
@@ -28,3 +29,6 @@ fi
 
 # Plot basic summary of observations
 python3 ./src/plot_summary.py "$argument"
+
+# Run schedule
+python3 ./src/schedule.py "$argument"
