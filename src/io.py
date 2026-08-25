@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import csv
+import yaml
 
 # From https://stackoverflow.com/a/69796836
 def get_delimiter(file_path, bytes = 4096):
@@ -32,3 +33,10 @@ def load_csv(fname, remove_zeros=False):
     df = df.reset_index()
 
     return df
+
+def load_config(fname):
+
+    with open(fname, "r") as file:
+        config = yaml.safe_load(file)
+
+    return config

@@ -1,0 +1,14 @@
+## Telescope Configuration ##
+
+data:
+  path: "./data_in/26BPI-remainingobservations.csv"
+
+observations:
+  start_date: "2026-08-06 18:00"    # Start date and time of observations
+  end_date: "2026-08-10 18:00"      # End data and time of observations
+  exp_time: 60                      # Exposure time [seconds] per observation
+
+telescope:
+  observatory: "jcmt"               # Telescope where you are observing from
+  read_out: 20                      # Time [seconds] to read out data at the end of a observation block
+  slew_rate: 0.8                    # Speed [degrees/second] the telescope can rotate to next target

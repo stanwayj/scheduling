@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import datetime
 
-from src import load_csv
+from src import *
 
 import astroplan
 from astroplan import Observer, FixedTarget
@@ -47,15 +47,18 @@ def construct_blocks(fname, exposure_time, read_out_time):
     return blocks   
 
 
-# TODO: Dates, constraints, and exposure (maybe more) times should be read from a parameter file 
-def schedule(fname, start, end, site='jcmt'):
+# TODO: Plotting! 
+def schedule(fname):
+
+    ## Load Config File ##
+    config = load_config(fname)
 
     ## Observatory ##
-    observer = Observer.at_site(site)
+    observer = Observer.at_site(config['telescope']['observatory'])
 
     ## Start and End dates ##
-    start_time = Time(start, format='iso')
-    end_time = Time(end, format='iso')
+    start_time = Time(config['observations']['start_date'], format='iso')
+    end_time = Time(config['observations']['end_date'], format='iso')
 
     ## Global Constraints ##
     # TODO: add options for more/less constraints from parameter file
@@ -64,15 +67,15 @@ def schedule(fname, start, end, site='jcmt'):
                           LocalTimeConstraint(min=datetime.time(00,00), max=datetime.time(12,00))]
 
     ## Exposure times ##
-    exp_time = 60 * u.second
-    read_out = 20 * u.second
+    exp_time = config['observations']['exp_time'] * u.second
+    read_out = config['telescope']['read_out'] * u.second
 
     # Call blocks from function
-    blocks = construct_blocks(fname, exp_time, read_out)
+    blocks = construct_blocks(config['data']['path'], exp_time, read_out)
 
     ## Transitioner ##
     # Takes about ~20 minutes for the new instrument to be ready
-    slew_rate = 0.8*u.deg/u.second
+    slew_rate = config['telescope']['read_out'] * u.deg/u.second
     transitioner = Transitioner(slew_rate, {'Instrument': {('UU', 'AWEOWEO'): 1200*u.second,
                                                            ('UU', 'KUNTUR'): 1200*u.second,
                                                            ('AWEOWEO', 'KUNTUR'): 1200*u.second,
@@ -86,7 +89,7 @@ def schedule(fname, start, end, site='jcmt'):
     priority_schedule = Schedule(start_time, end_time)
     prior_scheduler(blocks, priority_schedule)
 
-    # Convert to Pandas Dataframe and save as csv
+    ## Convert to Pandas Dataframe and save as csv
     df_out = priority_schedule.to_table().to_pandas()
     df_out.to_csv("./data_out/schedule.csv", index=False)
 
@@ -96,5 +99,4 @@ def schedule(fname, start, end, site='jcmt'):
     plt.legend(loc = "upper right")
     plt.show()
 
-schedule("./data_in/26BPI-remainingobservations.csv", '2026-08-06 19:00', '2026-08-10 19:00')
- 
+schedule("./configuration.yaml")
