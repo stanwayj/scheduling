@@ -70,6 +70,31 @@ def check_schedule(config):
     else:
         print("All targets in schedule!")
 
+# TODO: add more constraint options
+def collect_global_constraints(config):
+
+    constraint_list = []
+    # Altitude constraint
+    if config['global_constraints']['altitude']['bool']:
+        min_altitude = config['global_constraints']['altitude']['min_altitude']
+        max_altitude = config['global_constraints']['altitude']['max_altitude']
+        constraint_list.append(AltitudeConstraint(min=min_altitude*u.degree, max=max_altitude*u.degree))
+    # Airmass constraint
+    if config['global_constraints']['airmass']['bool']:
+        min_airmass = config['global_constraints']['airmass']['min_airmass']
+        max_airmass = config['global_constraints']['airmass']['max_airmass']
+        boolean = config['global_constraints']['airmass']['boolean_constraint']
+        constraint_list.append(AirmassConstraint(max=max_airmass, min=min_airmass, boolean_constraint=boolean))
+    # Local time constraint
+    if config['global_constraints']['local_time']['bool']:
+        min_time = datetime.time(config['global_constraints']['local_time']['min_time'][0], 
+                                 config['global_constraints']['local_time']['min_time'][1])
+        max_time = datetime.time(config['global_constraints']['local_time']['max_time'][0],
+                                 config['global_constraints']['local_time']['max_time'][1])
+        constraint_list.append(LocalTimeConstraint(min=min_time, max=max_time))
+
+    return constraint_list
+
 # TODO: Improve plotting 
 def schedule(fname):
 
@@ -84,16 +109,13 @@ def schedule(fname):
     end_time = Time(config['observations']['end_date'], format='iso')
 
     ## Global Constraints ##
-    # TODO: add options for more/less constraints from parameter file, as a seperate function
-    global_constraints = [AltitudeConstraint(min=30*u.degree, max=85*u.degree),
-                          AirmassConstraint(max = 3, boolean_constraint = False),
-                          LocalTimeConstraint(min=datetime.time(00,00), max=datetime.time(12,00))]
+    global_constraints = collect_global_constraints(config)
 
     ## Exposure times ##
     exp_time = config['observations']['exp_time'] * u.second
     read_out = config['telescope']['read_out'] * u.second
 
-    # Call blocks from function
+    ## Observing Blocks ##
     blocks = construct_blocks(config['data']['path'], exp_time, read_out)
 
     ## Transitioner ##

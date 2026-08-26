@@ -12,3 +12,21 @@ telescope:
   observatory: "jcmt"               # Telescope where you are observing from
   read_out: 20                      # Time [seconds] to read out data at the end of a observation block
   slew_rate: 0.8                    # Speed [degrees/second] the telescope can rotate to next target
+
+global_constraints:                 # Constrains that apply to all observations
+
+  altitude:                         # Astroplan AltitudeConstraint class
+    bool: True                      # Apply constraint [True / False]
+    min_altitude: 30                # Minimum elevation above the horizon [degrees]
+    max_altitude: 85                # Maximum elevation above the horizon [degrees]
+  
+  airmass:                          # Astroplan AirmassConstraint class
+    bool: True                      # Apply constraint [True / False]
+    min_airmass: False              # Minimum airmass of the target [float / False]
+    max_airmass: 3                  # Maximum airmass of the target [float / False]
+    boolean_constraint: False       # If False observations will be closer to minimum airmass [True / False]
+  
+  local_time:                       # Astroplan LocalTimeConstraint class
+    bool: True                      # Apply constraint [True / False]
+    min_time: [18,00]               # Time at which observations start [hr, min]
+    max_time: [06,00]               # Time at which observations end [hr, min]
