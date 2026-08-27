@@ -32,4 +32,4 @@ global_constraints:                 # Constrains that apply to all observations
     max_time: [06,00]               # Time at which observations end [hr, min]
 
 misc:
-  time_resolution: 300              # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
+  time_resolution: 60               # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
