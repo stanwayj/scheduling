@@ -108,7 +108,7 @@ def check_schedule(config):
     # Save the missing targets to a file if any are missed.  
     if df_missing.shape[0] > 0:
         print("Targets Missing! Saving list of missing targets to csv...")
-        df_missing.to_csv(f"./data_out/{start_date}_{end_date}missing_targets.csv", index=False) 
+        df_missing.to_csv(f"./data_out/{start_date}_{end_date}_missing_targets.csv", index=False) 
     else:
         print("All targets in schedule!")
 
