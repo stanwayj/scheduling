@@ -40,3 +40,17 @@ def load_config(fname):
         config = yaml.safe_load(file)
 
     return config
+
+def load_schedule(config, drop_transition=True):
+
+    start_date = config['observations']['start_date'].split(" ")[0]
+    end_date = config['observations']['end_date'].split(" ")[0]
+    fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
+
+    df = pd.read_csv(fin, sep=',')
+
+    if drop_transition:
+        df = df[df['target'] != "TransitionBlock"]
+        df = df.reset_index(drop=True)
+
+    return df

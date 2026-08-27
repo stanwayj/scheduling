@@ -62,10 +62,7 @@ def check_schedule(config):
     start_date = config['observations']['start_date'].split(" ")[0]
     end_date = config['observations']['end_date'].split(" ")[0]
     fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
-
-    df_schedule = pd.read_csv(fin, sep=',')
-    df_schedule = df_schedule[df_schedule['target'] != "TransitionBlock"]
-    df_schedule = df_schedule.reset_index(drop=True)
+    df_schedule = load_schedule(config)
 
     # Returns a dictonary with the total number of scans planned per target.
     planned_targets = {}
