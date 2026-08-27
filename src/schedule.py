@@ -41,12 +41,18 @@ def construct_blocks(fname, exposure_time, read_out_time):
         # Construct target object
         target = FixedTarget(coord=SkyCoord(ra=ra*u.deg, dec=dec*u.deg), name=target)
 
-        # Construct observing block objects
-        b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, n_scans, read_out_time,
+        # Construct observing block objects, split each scan into singular block
+        if n_scans > 1:
+            for n in range(n_scans):
+                b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, 1, read_out_time,
+                                                  configuration = {"Instrument": instrument})
+                blocks.append(b)     
+        else:
+            b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, 1, read_out_time,
                                           configuration = {"Instrument": instrument})
-        blocks.append(b)
-        
-    return blocks   
+            blocks.append(b)
+
+    return blocks 
 
 def check_schedule(config):
 
@@ -128,9 +134,11 @@ def schedule(fname):
                                                             'default': 1200*u.second}})
 
     ## Priority Scheduler ##
+    time_resolution = config['misc']['time_resolution'] * u.second
     prior_scheduler = PriorityScheduler(constraints = global_constraints,
                                         observer = observer,
-                                        transitioner = transitioner)
+                                        transitioner = transitioner,
+                                        time_resolution = time_resolution)
 
     priority_schedule = Schedule(start_time, end_time)
     prior_scheduler(blocks, priority_schedule)
@@ -146,7 +154,7 @@ def schedule(fname):
     plt.figure(figsize = (14,6))
     plot_schedule_airmass(priority_schedule)
     plt.legend(loc = "upper right")
-    plt.show()
+    #plt.show()
 
 
 if __name__ == "__main__":  
