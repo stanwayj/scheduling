@@ -63,7 +63,8 @@ def check_schedule(config):
 
         merged = df_data.merge(df_schedule, on='target', how='outer', indicator=True)
         missing_targets = merged[merged['_merge'] == 'left_only']
-        missing_targets = missing_targets.drop(columns=['_merge'])
+        missing_targets = missing_targets.drop(columns=['_merge', 'start time (UTC)', 'end time (UTC)', 
+                                                        'duration (minutes)', 'ra', 'dec', 'configuration'])
 
         missing_targets.to_csv("./data_out/missing_targets.csv", index=False)
         
