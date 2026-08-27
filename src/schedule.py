@@ -58,7 +58,12 @@ def construct_blocks(fname, exposure_time, read_out_time):
 def check_schedule(config):
 
     df_data = load_csv(config['data']['path'], remove_zeros=True)
-    df_schedule = pd.read_csv("./data_out/schedule.csv", sep=',')
+
+    start_date = config['observations']['start_date'].split(" ")[0]
+    end_date = config['observations']['end_date'].split(" ")[0]
+    fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
+
+    df_schedule = pd.read_csv(fin, sep=',')
     df_schedule = df_schedule[df_schedule['target'] != "TransitionBlock"]
     df_schedule = df_schedule.reset_index(drop=True)
 
@@ -103,7 +108,7 @@ def check_schedule(config):
     # Save the missing targets to a file if any are missed.  
     if df_missing.shape[0] > 0:
         print("Targets Missing! Saving list of missing targets to csv...")
-        df_missing.to_csv("./data_out/missing_targets.csv", index=False) 
+        df_missing.to_csv(f"./data_out/{start_date}_{end_date}missing_targets.csv", index=False) 
     else:
         print("All targets in schedule!")
 
@@ -116,7 +121,7 @@ def collect_global_constraints(config):
         min_altitude = config['global_constraints']['altitude']['min_altitude']
         max_altitude = config['global_constraints']['altitude']['max_altitude']
         constraint_list.append(AltitudeConstraint(min=min_altitude*u.degree, max=max_altitude*u.degree))
-        
+
     # Airmass constraint
     if config['global_constraints']['airmass']['bool']:
         min_airmass = config['global_constraints']['airmass']['min_airmass']
@@ -146,7 +151,7 @@ def collect_global_constraints(config):
             constraint_list.append(AtNightConstraint.twilight_nautical())
         else:
             sys.exit("Only one of astronomoical, civil, or nautical can be true. Quitting...")
-
+   
     return constraint_list
 
 # TODO: Improve plotting 
@@ -192,7 +197,11 @@ def schedule(fname):
 
     ## Convert to Pandas Dataframe and save as csv
     df_out = priority_schedule.to_table().to_pandas()
-    df_out.to_csv("./data_out/schedule.csv", index=False)
+
+    start_date = config['observations']['start_date'].split(" ")[0]
+    end_date = config['observations']['end_date'].split(" ")[0]
+    fout = f"./data_out/{start_date}_{end_date}_schedule.csv"   
+    df_out.to_csv(fout, index=False)
 
     ## Check if all targets are in the schedule, save any that cannot be fit into the schedule
     check_schedule(config)
