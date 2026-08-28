@@ -17,8 +17,8 @@ if [[ "$option1" == "clean" ]]; then
     exit 1
 elif [[ "$option1" == *.yaml ]]; then
     echo "Plotting summary and running schedule from $option1"
-    python3 ./src/plot_summary.py "$option1"  
-    python3 ./src/schedule.py "$option1"  
+    python3 ./src/schedule.py "$option1"
+    python3 ./src/plot_summary.py "$option1"    
 else
     echo "The first command line argument must be ``clean'' or a yaml configuration file"
 fi

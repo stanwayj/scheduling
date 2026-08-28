@@ -1,8 +1,13 @@
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.cm as cm
 import numpy as np
 import sys
 
 from src import *
+
+from astropy.time import Time
+import astropy.units as u
 
 """
 Produces a vareity of plots for all scheduled observations
@@ -64,6 +69,66 @@ def plot_histo_dec(fname):
     plt.savefig("./plots/overview_histo_ra.png", dpi=200)   
 
 
+def plot_histo_schedule(config):
+
+    df_schedule = load_schedule(config)
+    start_time = config['observations']['start_time']
+
+    observing_time_per_night = {}
+    for index, row in df_schedule.iterrows():
+        date, time = row['start time (UTC)'].split(" ")
+        yesterday = (Time(date) - 1 * u.day).iso.split(" ")[0]
+
+        # Check if any observations for that date in the dictonary
+        if date not in observing_time_per_night:
+            # Make a new entry if the time is after the start of observations
+            if Time(date + " " + time.split(".")[0]) >= Time(date + " " + start_time):
+                observing_time_per_night[date] = row['duration (minutes)'] / 60
+            # If not its from the previous night
+            else:
+                # Check if any observations exist from the previous night
+                if yesterday not in observing_time_per_night:
+                    # If yes, make a new entry
+                    observing_time_per_night[yesterday] = row['duration (minutes)'] / 60
+                else:
+                    # If no, add time to previous entry
+                    observing_time_per_night[yesterday] += row['duration (minutes)'] / 60
+        # Observations from this day already exist in the directory
+        else:
+            # Append duration to previous total if the time is after the start of observations
+            if Time(date + " " + time.split(".")[0]) >= Time(date + " " + start_time):
+                observing_time_per_night[date] += row['duration (minutes)'] / 60
+            # If not, once again we check the previous night.
+            else:
+                if yesterday not in observing_time_per_night:
+                    observing_time_per_night[yesterday] = row['duration (minutes)'] / 60
+                else:
+                    observing_time_per_night[yesterday] += row['duration (minutes)'] / 60         
+
+    # Plotting functions
+    fig, ax = plt.subplots(1,1, figsize=(8,3.5))
+
+    dates = observing_time_per_night.keys()
+    hours = list(observing_time_per_night.values())
+
+    norm = mcolors.Normalize(vmin=0, vmax=12)
+    colors = cm.jet(norm(hours))
+
+    ax.bar(dates, hours, color=colors, edgecolor='k')
+
+    ax.set_xlabel("Dates", fontsize=12)
+    ax.set_ylabel("Hours per night", fontsize=12)
+
+    ax.set_ylim(0, 12)
+    ax.set_xlim(config['observations']['start_date'], config['observations']['end_date'])
+    ax.set_xticklabels([])
+
+    sm = cm.ScalarMappable(cmap='jet', norm=norm)
+    sm.set_array([]) 
+    cbar = fig.colorbar(sm, ax=ax)
+
+    plt.savefig("./plots/overview_hours_per_night.png", dpi=200)
+
 if __name__ == "__main__":  
 
     # Check if arguments were actually passed
@@ -76,3 +141,4 @@ if __name__ == "__main__":
 
     plot_histo_instrument(config['data']['path'])
     plot_histo_dec(config['data']['path'])
+    plot_histo_schedule(config)
