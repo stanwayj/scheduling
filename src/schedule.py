@@ -59,8 +59,8 @@ def check_schedule(config):
 
     df_data = load_csv(config['data']['path'], remove_zeros=True)
 
-    start_date = config['observations']['start_date'].split(" ")[0]
-    end_date = config['observations']['end_date'].split(" ")[0]
+    start_date = config['observations']['start_date']   #.split(" ")[0]
+    end_date = config['observations']['end_date']
     fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
     df_schedule = load_schedule(config)
 
@@ -161,8 +161,8 @@ def schedule(fname):
     observer = Observer.at_site(config['telescope']['observatory'])
 
     ## Start and End dates ##
-    start_time = Time(config['observations']['start_date'], format='iso')
-    end_time = Time(config['observations']['end_date'], format='iso')
+    start_time = Time(config['observations']['start_date'] + " " + config['observations']['start_time'], format='iso')
+    end_time = Time(config['observations']['end_date'] + " " + config['observations']['end_time'], format='iso')
 
     ## Global Constraints ##
     global_constraints = collect_global_constraints(config)
@@ -195,8 +195,8 @@ def schedule(fname):
     ## Convert to Pandas Dataframe and save as csv
     df_out = priority_schedule.to_table().to_pandas()
 
-    start_date = config['observations']['start_date'].split(" ")[0]
-    end_date = config['observations']['end_date'].split(" ")[0]
+    start_date = config['observations']['start_date']
+    end_date = config['observations']['end_date']
     fout = f"./data_out/{start_date}_{end_date}_schedule.csv"   
     df_out.to_csv(fout, index=False)
 

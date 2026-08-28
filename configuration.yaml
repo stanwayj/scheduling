@@ -4,8 +4,10 @@ data:
   path: "./example_data/26BPI-remainingobservations.csv"
 
 observations:
-  start_date: "2026-08-01 18:00"    # Start date and time of observations
-  end_date: "2027-01-30 18:00"      # End data and time of observations
+  start_date: "2026-08-01"          # Start date of observations
+  end_date: "2027-01-31"            # End data of observations
+  start_time: "18:00"               # Start time for each observing day
+  end_time: "06:00"                 # End time for each observing day
   exp_time: 1800                    # Exposure time [seconds] per observation
 
 telescope:
