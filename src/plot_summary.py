@@ -1,5 +1,6 @@
-import matplotlib.pyplot as plt
+from datetime import date, timedelta
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
 import sys
@@ -105,16 +106,35 @@ def plot_histo_schedule(config):
                 else:
                     observing_time_per_night[yesterday] += row['duration (minutes)'] / 60         
 
-    # Plotting functions
-    fig, ax = plt.subplots(1,1, figsize=(8,3.5))
+    # Add dates with no observations to dictonary for plotting
+    start_date = config['observations']['start_date']
+    end_date = config['observations']['end_date']
+    date_range = pd.date_range(start=start_date, end=end_date).strftime('%Y-%m-%d')
+    dates_list = date_range.tolist()
+    for date in dates_list:
+        if date not in observing_time_per_night:
+            observing_time_per_night[date] = 0
 
-    dates = observing_time_per_night.keys()
-    hours = list(observing_time_per_night.values())
+    # Add the day before and after to pad plot
+    day_before = (Time(start_date) - 1 * u.day).iso.split(" ")[0]
+    day_after = (Time(end_date) + 1 * u.day).iso.split(" ")[0]
+    observing_time_per_night[day_before] = 0
+    observing_time_per_night[day_after] = 0
+    
+    # Reorder dictionary
+    observations_order = {key: observing_time_per_night[key] for key in sorted(observing_time_per_night)}
+
+    print(observations_order)
+    # Plotting functions
+    fig, ax = plt.subplots(1,1, figsize=(7,2.5))
+
+    dates = observations_order.keys()
+    hours = list(observations_order.values())
 
     norm = mcolors.Normalize(vmin=0, vmax=12)
     colors = cm.jet(norm(hours))
 
-    ax.bar(dates, hours, color=colors, edgecolor='k')
+    ax.bar(dates, hours, color=colors, edgecolor='k', linewidth=0.5, width=1)
 
     ax.set_xlabel("Dates", fontsize=12)
     ax.set_ylabel("Hours per night", fontsize=12)
@@ -139,6 +159,6 @@ if __name__ == "__main__":
 
     config = load_config(config_path)
 
-    plot_histo_instrument(config['data']['path'])
-    plot_histo_dec(config['data']['path'])
+    #plot_histo_instrument(config['data']['path'])
+    #plot_histo_dec(config['data']['path'])
     plot_histo_schedule(config)
