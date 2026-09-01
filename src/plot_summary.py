@@ -124,7 +124,6 @@ def plot_histo_schedule(config):
     # Reorder dictionary
     observations_order = {key: observing_time_per_night[key] for key in sorted(observing_time_per_night)}
 
-    print(observations_order)
     # Plotting functions
     fig, ax = plt.subplots(1,1, figsize=(7,2.5))
 
@@ -159,6 +158,6 @@ if __name__ == "__main__":
 
     config = load_config(config_path)
 
-    #plot_histo_instrument(config['data']['path'])
-    #plot_histo_dec(config['data']['path'])
+    plot_histo_instrument(config['data']['path'])
+    plot_histo_dec(config['data']['path'])
     plot_histo_schedule(config)
