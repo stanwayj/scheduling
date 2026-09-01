@@ -26,7 +26,7 @@ global_constraints:                 # Constrains that apply to all observations
     bool: True                      # Apply constraint [True / False]
     min_airmass: False              # Minimum airmass of the target [float / False]
     max_airmass: 3                  # Maximum airmass of the target [float / False]
-    boolean_constraint: False       # If False observations will be closer to minimum airmass [True / False]
+    boolean_constraint: True        # If False observations will be closer to minimum airmass [True / False]
   
   local_time:                       # Astroplan LocalTimeConstraint class
     bool: True                      # Apply constraint [True / False]
@@ -40,4 +40,4 @@ global_constraints:                 # Constrains that apply to all observations
     twilight_nautical: False        # Nighttime between nautical twilights (-12 degrees) [True / False]
 
 misc:
-  time_resolution: 60               # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
+  time_resolution: 300               # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
