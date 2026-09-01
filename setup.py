@@ -18,7 +18,7 @@ setup(name="scheduler",
           "astropy",  
           "astroplan",
           "sys",
-          "yaml"],
+          "pyyaml"],
 
       author="J.S.Stanway",
       packages=find_packages(),
