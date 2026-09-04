@@ -1,7 +1,7 @@
 ## Telescope Configuration ##
 
 data:
-  path: "./example_data/26BPI-remainingobservations.csv"
+  path: "./example_data/test_data.csv"
 
 observations:
   start_date: "2026-08-01"          # Start date of observations
@@ -23,7 +23,7 @@ global_constraints:                 # Constrains that apply to all observations
     max_altitude: 85                # Maximum elevation above the horizon [degrees]
   
   airmass:                          # Astroplan AirmassConstraint class
-    bool: True                      # Apply constraint [True / False]
+    bool: False                     # Apply constraint [True / False]
     min_airmass: False              # Minimum airmass of the target [float / False]
     max_airmass: 3                  # Maximum airmass of the target [float / False]
     boolean_constraint: True        # If False observations will be closer to minimum airmass [True / False]
@@ -40,4 +40,4 @@ global_constraints:                 # Constrains that apply to all observations
     twilight_nautical: False        # Nighttime between nautical twilights (-12 degrees) [True / False]
 
 misc:
-  time_resolution: 300               # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
+  time_resolution: 60               # Time resolution [seconds] in PriorityScheduler, very RAM intensive!
