@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# TODO: 
-# 1. make the argument accept parameter file
-# 2. explain different arguments
-
 # Load arguments from command line argument
 option1=$1
 
