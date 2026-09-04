@@ -18,7 +18,7 @@ from astropy.time import Time
 import astropy.units as u
 
 """
-WIP very preliminary!
+WIP somewhat preliminary!
 Builds schedule from input data
 """
 
@@ -151,7 +151,7 @@ def collect_global_constraints(config):
    
     return constraint_list
 
-# TODO: Improve plotting 
+# TODO: Break schedule into smaller blocks (e.g. week long) to reduce RAM usage
 def schedule(fname):
 
     ## Load Config File ##
@@ -175,7 +175,6 @@ def schedule(fname):
     blocks = construct_blocks(config['data']['path'], exp_time, read_out)
 
     ## Transitioner ##
-    # Takes about ~20 minutes for the new instrument to be ready
     slew_rate = config['telescope']['read_out'] * u.deg/u.second
     transitioner = Transitioner(slew_rate, {'Instrument': {('UU', 'AWEOWEO'): 1200*u.second,
                                                            ('UU', 'KUNTUR'): 1200*u.second,
@@ -203,11 +202,6 @@ def schedule(fname):
     ## Check if all targets are in the schedule, save any that cannot be fit into the schedule
     check_schedule(config)
 
-    ## Plot schedule
-    plt.figure(figsize = (14,6))
-    plot_schedule_airmass(priority_schedule)
-    plt.legend(loc = "upper right")
-    #plt.show()
 
 
 if __name__ == "__main__":  
