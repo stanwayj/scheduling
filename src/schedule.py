@@ -29,17 +29,20 @@ def construct_blocks(fname, exposure_time, read_out_time):
     df = load_csv(fname, remove_zeros=True)
     
     blocks = []
+    weatherband = {}
     for index, row in df.iterrows():
         # Define variables we need from the dataframe 
         tagpriority = row['tagpriority']
         instrument = row['instrument']
-        target = row['target']
+        targetid = row['target']
         ra = row['ra2000']
         dec = row['dec2000']
         n_scans = row['remaining']
+        projectid = row['projectid']
 
         # Construct target object
-        target = FixedTarget(coord=SkyCoord(ra=ra*u.deg, dec=dec*u.deg), name=target)
+        block_name = f'{projectid}_{targetid}'
+        target = FixedTarget(coord=SkyCoord(ra=ra*u.deg, dec=dec*u.deg), name=block_name)
 
         # Construct observing block objects, split each scan into singular block
         if n_scans > 1:
@@ -49,17 +52,21 @@ def construct_blocks(fname, exposure_time, read_out_time):
                 blocks.append(b)     
         else:
             b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, 1, read_out_time,
-                                          configuration = {"Instrument": instrument})
+                                              configuration = {"Instrument": instrument})
             blocks.append(b)
 
-    return blocks 
+        # Weatherband dictionary entry
+        key = f'{projectid}_{instrument}_{targetid}'
+        weatherband[key] = row['weatherband']
+
+    return blocks, weatherband 
 
 # Not pretty, but it tells you if you're missing observations
 def check_schedule(config):
 
     df_data = load_csv(config['data']['path'], remove_zeros=True)
 
-    start_date = config['observations']['start_date']   #.split(" ")[0]
+    start_date = config['observations']['start_date']
     end_date = config['observations']['end_date']
     fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
     df_schedule = load_schedule(config)
@@ -68,9 +75,9 @@ def check_schedule(config):
     planned_targets = {}
     for index, row in df_data.iterrows():
         if row['target'] not in planned_targets:
-            planned_targets[row['target']] = row['remaining']
+            planned_targets[row['projectid'] + "_" + row['target']] = row['remaining']
         else:
-            planned_targets[row['target']] += row['remaining']
+            planned_targets[row['projectid'] + "_" + row['target']] += row['remaining']
 
     # Returns a dictonary with the total number of scans scheduled per target.
     scheduled_targets = {}
@@ -151,6 +158,24 @@ def collect_global_constraints(config):
    
     return constraint_list
 
+# Add weatherband dictonary (from construct blocks) to schedule csv 
+def add_weather_bands(df, weatherband_dict, fout):
+
+    weatherband_list = []
+    for index, row in df.iterrows():
+        if row['target'] != "TransitionBlock":
+            instrument = row['configuration'].split("'")[3]
+            targetid = row['target']
+            projectid, target = targetid.split("_")
+        
+            key = f'{projectid}_{instrument}_{target}'      
+            weatherband_list.append(int(weatherband_dict[key]))
+        else:
+            weatherband_list.append(np.nan)
+
+    df['weather band'] = weatherband_list
+    df.to_csv(fout, index=False)
+
 # TODO: Break schedule into smaller blocks (e.g. week long) to reduce RAM usage
 def schedule(fname):
 
@@ -167,12 +192,10 @@ def schedule(fname):
     ## Global Constraints ##
     global_constraints = collect_global_constraints(config)
 
-    ## Exposure times ##
+    ## Exposure times and Observing Blocks ##
     exp_time = config['observations']['exp_time'] * u.second
     read_out = config['telescope']['read_out'] * u.second
-
-    ## Observing Blocks ##
-    blocks = construct_blocks(config['data']['path'], exp_time, read_out)
+    blocks, weatherband = construct_blocks(config['data']['path'], exp_time, read_out)
 
     ## Transitioner ##
     slew_rate = config['telescope']['read_out'] * u.deg/u.second
@@ -199,9 +222,12 @@ def schedule(fname):
     fout = f"./data_out/{start_date}_{end_date}_schedule.csv"   
     df_out.to_csv(fout, index=False)
 
+    ## Add weather band information to schedule csv and override original
+    schedule = load_schedule(config, drop_transition=False)
+    add_weather_bands(schedule, weatherband, fout)
+
     ## Check if all targets are in the schedule, save any that cannot be fit into the schedule
     check_schedule(config)
-
 
 
 if __name__ == "__main__":  
