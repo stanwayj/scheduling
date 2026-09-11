@@ -41,7 +41,7 @@ def load_config(fname):
 
     return config
 
-def load_schedule(config, drop_transition=True, weatherband='All'):
+def load_schedule(config, weatherband='All', drop_transition=True):
 
     start_date = config['observations']['start_date'].split(" ")[0]
     end_date = config['observations']['end_date'].split(" ")[0]

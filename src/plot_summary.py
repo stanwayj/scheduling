@@ -70,9 +70,9 @@ def plot_histo_dec(fname):
     plt.savefig("./plots/overview_histo_ra.png", dpi=200)   
 
 
-def plot_histo_schedule(config):
+def plot_histo_schedule(config, weatherband):
 
-    df_schedule = load_schedule(config)
+    df_schedule = load_schedule(config, weatherband)
     start_time = config['observations']['start_time']
 
     observing_time_per_night = {}
@@ -146,7 +146,12 @@ def plot_histo_schedule(config):
     sm.set_array([]) 
     cbar = fig.colorbar(sm, ax=ax)
 
-    plt.savefig("./plots/overview_hours_per_night.png", dpi=200)
+    if isinstance(weatherband, int):
+        fout = f"./plots/hours_per_night_weatherband={weatherband}.png"
+    else:
+        fout = "./plots/hours_per_night_all_weatherbands.png"
+
+    plt.savefig(fout, dpi=200)
 
 if __name__ == "__main__":  
 
@@ -160,4 +165,7 @@ if __name__ == "__main__":
 
     plot_histo_instrument(config['data']['path'])
     plot_histo_dec(config['data']['path'])
-    plot_histo_schedule(config)
+
+    # Make plots for all weatherbands
+    for wb in [1, 2, 3, 4, 5, 'All']:
+        plot_histo_schedule(config, weatherband=wb)
