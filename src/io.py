@@ -41,7 +41,7 @@ def load_config(fname):
 
     return config
 
-def load_schedule(config, drop_transition=True):
+def load_schedule(config, drop_transition=True, weatherband='All'):
 
     start_date = config['observations']['start_date'].split(" ")[0]
     end_date = config['observations']['end_date'].split(" ")[0]
@@ -49,8 +49,16 @@ def load_schedule(config, drop_transition=True):
 
     df = pd.read_csv(fin, sep=',')
 
+    # Remove transition block from schedule
     if drop_transition:
         df = df[df['target'] != "TransitionBlock"]
         df = df.reset_index(drop=True)
+
+    # Select a specific weatherband
+    if weatherband != 'All':
+        df = df[df['weather band'] == weatherband]
+
+    # Reset index
+    df = df.reset_index(drop=True)
 
     return df
