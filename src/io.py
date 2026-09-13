@@ -41,7 +41,7 @@ def load_config(fname):
 
     return config
 
-def load_schedule(config, weatherband='All', drop_transition=True):
+def load_schedule(config, weatherband='All', instrument='All', drop_transition=True):
 
     start_date = config['observations']['start_date'].split(" ")[0]
     end_date = config['observations']['end_date'].split(" ")[0]
@@ -58,6 +58,10 @@ def load_schedule(config, weatherband='All', drop_transition=True):
     if weatherband != 'All':
         df = df[df['weather band'] == weatherband]
 
+    # Select a spectifc instrument
+    if instrument != 'All':
+        df = df[df['configuration'] == f"{{'Instrument': '{instrument}'}}"]
+    
     # Reset index
     df = df.reset_index(drop=True)
 
