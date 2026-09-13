@@ -186,7 +186,6 @@ def construct_transitioner(config):
         
         for i in range(len(key)):
             try:
-                #('UU', 'AWEOWEO') for dict key
                 a, b = key[i].split('_to_')
                 instrument_dict[(a, b)] = config['instruments']['transitions'][key[i]] * u.second
             except:
