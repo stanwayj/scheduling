@@ -17,7 +17,6 @@ setup(name="scheduler",
           "pandas",
           "astropy",  
           "astroplan",
-          "sys",
           "pyyaml"],
 
       author="J.S.Stanway",

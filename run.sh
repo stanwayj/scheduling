@@ -8,6 +8,7 @@ option1=$1
 if [[ "$option1" == "clean" ]]; then
     echo "Cleaning data and plot directories"
     rm "./plots"/*
+    rm "./plots/verbose"/*
     rm "./data_in"/*
     rm "./data_out"/*
     exit 1

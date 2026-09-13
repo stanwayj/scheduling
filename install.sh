@@ -8,3 +8,4 @@ pip install -e .
 mkdir "./data_in"
 mkdir "./data_out"
 mkdir "./plots"
+mkdir "./plots/verbose"
