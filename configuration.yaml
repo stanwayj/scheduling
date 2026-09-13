@@ -15,6 +15,17 @@ telescope:
   read_out: 20                      # Time [seconds] to read out data at the end of a observation block
   slew_rate: 0.8                    # Speed [degrees/second] the telescope can rotate to next target
 
+instruments:
+  instrument_list:                  # List all instruments available here
+    - UU     
+    - AWEOWEO
+    - KUNTUR
+  transitions:                      # Time [seconds] to transition between instruments. Assumes equal time from a->b and b->a, if not true, specify each case
+    AWEOWEO_to_KUNTUR: 1200
+    UU_to_AWEOWEO: 1200
+    UU_to_KUNTUR: 1200
+    default: 1800                   # If there is no transition listed, this default value is used.
+       
 global_constraints:                 # Constrains that apply to all observations
 
   altitude:                         # Astroplan AltitudeConstraint class

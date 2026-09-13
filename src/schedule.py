@@ -176,6 +176,30 @@ def add_weather_bands(df, weatherband_dict, fout):
     df['weather band'] = weatherband_list
     df.to_csv(fout, index=False)
 
+# Add transition between instruments from config file
+def construct_transitioner(config):
+
+    instrument_list = config['instruments']['instrument_list']
+    instrument_dict = {}
+    for inst in instrument_list:
+        key = [f'{inst}_to_{swap}' for swap in instrument_list if swap != inst]
+        
+        for i in range(len(key)):
+            try:
+                #('UU', 'AWEOWEO') for dict key
+                a, b = key[i].split('_to_')
+                instrument_dict[(a, b)] = config['instruments']['transitions'][key[i]] * u.second
+            except:
+                pass
+
+    # Add default swap time as a fall back
+    instrument_dict['default'] = config['instruments']['transitions']['default'] * u.second
+
+    slew_rate = config['telescope']['read_out'] * u.deg/u.second
+    transitioner = Transitioner(slew_rate, {'Instrument': instrument_dict})
+    
+    return transitioner
+
 # TODO: Break schedule into smaller blocks (e.g. week long) to reduce RAM usage
 def schedule(fname):
 
@@ -198,11 +222,7 @@ def schedule(fname):
     blocks, weatherband = construct_blocks(config['data']['path'], exp_time, read_out)
 
     ## Transitioner ##
-    slew_rate = config['telescope']['read_out'] * u.deg/u.second
-    transitioner = Transitioner(slew_rate, {'Instrument': {('UU', 'AWEOWEO'): 1200*u.second,
-                                                           ('UU', 'KUNTUR'): 1200*u.second,
-                                                           ('AWEOWEO', 'KUNTUR'): 1200*u.second,
-                                                            'default': 1200*u.second}})
+    transitioner = construct_transitioner(config)
 
     ## Priority Scheduler ##
     time_resolution = config['misc']['time_resolution'] * u.second
