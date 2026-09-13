@@ -3,7 +3,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-import sys
+import sys, os
 
 from src import *
 
@@ -14,7 +14,7 @@ import astropy.units as u
 Produces a vareity of plots for all scheduled observations
 """
 
-
+# Remake/improve this when I add instruments to config file. 
 def plot_histo_instrument(fname):
 
     df = load_csv(fname)
@@ -36,43 +36,49 @@ def plot_histo_instrument(fname):
 
     ax.legend()
 
-    plt.savefig("./plots/overview_histo_instrument.png", dpi=200)
+    plt.savefig("./plots/overview_histo_instrument.png", dpi=200, bbox_inches="tight")
 
 
 def plot_histo_dec(fname):  
 
     df = load_csv(fname)
 
+    # Seperate by DEC
     dec_range = [[-90, -60], [-60, -30], [-30, 0], [0, 30], [30, 60], [60, 90]]
     histo_list = []
     for i in range(len(dec_range)):
         df_dec = df[(df['dec2000'] > dec_range[i][0]) & (df['dec2000'] < dec_range[i][1])]
         histo_list.append(df_dec['ra2000'])
 
-
-    color_list = ["#0000ff", "#3300cc", "#660099", "#990066", "#cc0033", "#ff0000"]
-    label_list = [r"$-90^\circ < DEC < -60^\circ$", r"$-60^\circ < DEC < -30^\circ$", 
-                  r"$-30^\circ < DEC < 0^\circ$", r"$0^\circ < DEC < 30^\circ$", 
-                  r"$30^\circ < DEC < 60^\circ$", r"$60^\circ < DEC < 90^\circ$"]
+    # Colourbar setup
+    bounds = [-90, -60, -30, 0, 30, 60 , 90]
+    midpoints = [-75, -45, -15, 15, 45, 75]
+    cmap = cm.viridis
+    norm = mcolors.BoundaryNorm(boundaries=bounds, ncolors=cmap.N)
+    colours = [cmap(norm(val)) for val in midpoints]
 
     fig, ax = plt.subplots(1,1, figsize=(8,6))
 
-    ax.hist(histo_list, bins=36, stacked=True, color=color_list, label=label_list) 
+    ax.hist(histo_list, bins=36, stacked=True, color=colours) 
 
-    ax.set_ylabel("Count")
-    ax.set_xlabel("RA [degrees]")
+    ax.set_ylabel("Number of sources", fontsize=15)
+    ax.set_xlabel(r"RA [$^\circ$]", fontsize=15)
 
     ax.set_xlim(0, 360)
+    ax.set_xticks([0, 45, 90, 135, 180, 225, 270, 315, 360])
+
     fig.suptitle(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by DEC")
 
-    ax.legend(loc="upper center", ncols=2)
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)      
+    cbar = fig.colorbar(sm, ax=ax, boundaries=bounds, ticks=bounds, pad=0.01)
+    cbar.ax.set_title(r"DEC [$^\circ$]", y=1.01)
 
-    plt.savefig("./plots/overview_histo_ra.png", dpi=200)   
+    plt.savefig("./plots/overview_histo_ra.png", dpi=200, bbox_inches="tight")   
 
 
-def plot_histo_schedule(config, weatherband):
+def plot_histo_schedule(config, weatherband, instrument):
 
-    df_schedule = load_schedule(config, weatherband)
+    df_schedule = load_schedule(config, weatherband, instrument)
     start_time = config['observations']['start_time']
 
     observing_time_per_night = {}
@@ -140,18 +146,54 @@ def plot_histo_schedule(config, weatherband):
 
     ax.set_ylim(0, 12)
     ax.set_xlim(config['observations']['start_date'], config['observations']['end_date'])
-    ax.set_xticklabels([])
 
     sm = cm.ScalarMappable(cmap='jet', norm=norm)
     sm.set_array([]) 
-    cbar = fig.colorbar(sm, ax=ax)
+    cbar = fig.colorbar(sm, ax=ax, pad=0.01)
 
-    if isinstance(weatherband, int):
-        fout = f"./plots/hours_per_night_weatherband={weatherband}.png"
+    # Title
+    start_date = config['observations']['start_date']
+    end_date = config['observations']['end_date']
+    missing_targets = f"./data_out/{start_date}_{end_date}_missing_targets.csv"
+    if os.path.isfile(missing_targets):
+        ax.set_title(f"Weatherband={weatherband} - Instrument={instrument}" + '\n' 
+                     "Not all targets in schedule!" + "\n" + 
+                     f"Check data_out/{start_date}_{end_date}_missing_targets.csv for details")
     else:
-        fout = "./plots/hours_per_night_all_weatherbands.png"
+        ax.set_title(f"Weatherband={weatherband} - Instrument={instrument}" + '\n' 
+                     "All targets in schedule!")
 
-    plt.savefig(fout, dpi=200)
+    # Logic (ish) for x tick labels
+    nmonths = int(end_date.split("-")[1]) - int(start_date.split("-")[1])
+    if nmonths < 0:
+        nmonths += 12
+
+    xlabel_list = [start_date]
+    for n in range(nmonths):
+        start_month = int(start_date.split("-")[1]) + 1
+        year = int(start_date.split("-")[0])
+        month = start_month + n
+
+        if month > 12:
+            year += 1
+            month -= 12
+        if month < 10:
+            xlabel_list.append(f'{year}-0{month}-01')
+        else:
+            xlabel_list.append(f'{year}-{month}-01')
+
+    xlabel_list.append(end_date)
+    ax.set_xticks(xlabel_list)
+    plt.xticks(rotation=90)
+
+    # Add weatherband/instrument to filename
+    if isinstance(weatherband, int) or instrument != 'All':
+        fout = f"./plots/verbose/hours_per_night_weatherband={weatherband}_instrument={instrument}.png"
+    else:
+        fout = "./plots/hours_per_night_all_observations.png"
+
+    plt.savefig(fout, dpi=200, bbox_inches="tight")
+    plt.close()
 
 if __name__ == "__main__":  
 
@@ -166,6 +208,8 @@ if __name__ == "__main__":
     plot_histo_instrument(config['data']['path'])
     plot_histo_dec(config['data']['path'])
 
-    # Make plots for all weatherbands
+    # Make plots for all weatherbands and instruments
+    inst_list = config['instruments']['instrument_list'] + ['All']
     for wb in [1, 2, 3, 4, 5, 'All']:
-        plot_histo_schedule(config, weatherband=wb)
+        for inst in inst_list:
+            plot_histo_schedule(config, weatherband=wb, instrument=inst)
