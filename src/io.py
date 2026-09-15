@@ -10,10 +10,20 @@ def get_delimiter(file_path, bytes = 4096):
     delimiter = sniffer.sniff(data).delimiter
     return delimiter
 
-def load_csv(fname, remove_zeros=False):
+def load_csv(config, remove_zeros=False):
 
-    delimiter = get_delimiter(fname)
-    df = pd.read_csv(fname, sep=delimiter)
+    delimiter = get_delimiter(config['data']['path'])
+    df = pd.read_csv(config['data']['path'], sep=delimiter)
+
+    # Check if all required headers are included
+    required_headers = ['projectid', 'tagpriority', 'instrument', 'target', 'ra2000', 'dec2000', 'remaining', 'weatherband']
+    missing_headers = []
+    for col_name in required_headers:
+        if col_name not in df.columns.values.tolist():
+            missing_headers.append(col_name)
+
+    if len(missing_headers) > 0:
+        raise TypeError(f"Missing data! Please add {missing_headers} to {config['data']['path']}. Headers are case sensitive")
 
     # Remove planets
     df = df[df.coordstype != 'PLANET']
