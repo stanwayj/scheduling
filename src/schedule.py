@@ -24,9 +24,9 @@ Builds schedule from input data
 
 # This currently assumes lower values of ``tagpriority`` is higher priority
 # TODO: add tagadj overwriting tagpriority
-def construct_blocks(fname, exposure_time, read_out_time):
+def construct_blocks(config, exposure_time, read_out_time):
 
-    df = load_csv(fname, remove_zeros=True)
+    df = load_csv(config, remove_zeros=True)
     
     blocks = []
     weatherband = {}
@@ -64,7 +64,7 @@ def construct_blocks(fname, exposure_time, read_out_time):
 # Not pretty, but it tells you if you're missing observations
 def check_schedule(config):
 
-    df_data = load_csv(config['data']['path'], remove_zeros=True)
+    df_data = load_csv(config, remove_zeros=True)
 
     start_date = config['observations']['start_date']
     end_date = config['observations']['end_date']
@@ -200,10 +200,7 @@ def construct_transitioner(config):
     return transitioner
 
 # TODO: Break schedule into smaller blocks (e.g. week long) to reduce RAM usage
-def schedule(fname):
-
-    ## Load Config File ##
-    config = load_config(fname)
+def schedule(config):
 
     ## Observatory ##
     observer = Observer.at_site(config['telescope']['observatory'])
@@ -218,7 +215,7 @@ def schedule(fname):
     ## Exposure times and Observing Blocks ##
     exp_time = config['observations']['exp_time'] * u.second
     read_out = config['telescope']['read_out'] * u.second
-    blocks, weatherband = construct_blocks(config['data']['path'], exp_time, read_out)
+    blocks, weatherband = construct_blocks(config, exp_time, read_out)
 
     ## Transitioner ##
     transitioner = construct_transitioner(config)
@@ -257,4 +254,6 @@ if __name__ == "__main__":
     else:
         print("No arguments were provided.")
 
-    schedule(config_path)
+    config = load_config(config_path)
+
+    schedule(config)

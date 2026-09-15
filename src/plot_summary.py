@@ -15,9 +15,9 @@ Produces a vareity of plots for all scheduled observations
 """
 
 # Remake/improve this when I add instruments to config file. 
-def plot_histo_instrument(fname):
+def plot_histo_instrument(config):
 
-    df = load_csv(fname)
+    df = load_csv(config)
 
     # Seperate by instrument
     instrument_list = config['instruments']['instrument_list']
@@ -52,9 +52,9 @@ def plot_histo_instrument(fname):
     plt.savefig("./plots/overview_histo_instrument.png", dpi=200, bbox_inches="tight")
 
 
-def plot_histo_dec(fname):  
+def plot_histo_dec(config):  
 
-    df = load_csv(fname)
+    df = load_csv(config)
 
     # Seperate by DEC
     dec_range = [[-90, -60], [-60, -30], [-30, 0], [0, 30], [30, 60], [60, 90]]
@@ -89,9 +89,9 @@ def plot_histo_dec(fname):
     plt.savefig("./plots/overview_histo_ra.png", dpi=200, bbox_inches="tight")   
 
 # TODO: When different exposure times are added the total time will need adjusting
-def plot_histo_weatherband(fname):
+def plot_histo_weatherband(config):
 
-    df = load_csv(fname)
+    df = load_csv(config)
 
     x_unique = df['weatherband'].unique()
     x = np.sort(x_unique)
@@ -245,9 +245,9 @@ if __name__ == "__main__":
 
     config = load_config(config_path)
 
-    plot_histo_instrument(config['data']['path'])
-    plot_histo_dec(config['data']['path'])
-    plot_histo_weatherband(config['data']['path'])
+    plot_histo_weatherband(config)
+    plot_histo_instrument(config)
+    plot_histo_dec(config)
 
     # Make plots for all weatherbands and instruments
     inst_list = config['instruments']['instrument_list'] + ['All']
