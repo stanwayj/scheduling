@@ -19,22 +19,35 @@ def plot_histo_instrument(fname):
 
     df = load_csv(fname)
 
-    ra_UU = df[df.instrument == "UU"]
-    ra_KUNTUR = df[df.instrument == "KUNTUR"]
-    ra_AWEOWEO = df[df.instrument == "AWEOWEO"]
+    # Seperate by instrument
+    instrument_list = config['instruments']['instrument_list']
+    histo_list = []
+    for inst in instrument_list:
+        histo_list.append(df[df.instrument == inst]['ra2000'])
+
+    # Colourbar setup
+    ninst = len(instrument_list)
+    cmap = cm.viridis
+    bounds = np.arange(ninst + 1)
+    norm = mcolors.BoundaryNorm(bounds, cmap.N)
+    colors = [cmap(i / (ninst - 1)) for i in range(ninst)]
 
     fig, ax = plt.subplots(1,1, figsize=(8,6))
 
-    ax.hist([ra_UU['ra2000'], ra_KUNTUR['ra2000'], ra_AWEOWEO['ra2000']], bins=36, stacked=True, 
-            color=['crimson', 'navy', 'dodgerblue'], label = ['UU', 'KUNTUR', 'AWEOWEO'])
+    ax.hist(histo_list, bins=36, stacked=True, color=colors, label = instrument_list)
 
-    ax.set_ylabel("Count")
-    ax.set_xlabel("RA [degrees]")
+    ax.set_ylabel("Number of sources", fontsize=15)
+    ax.set_xlabel(r"RA [$^\circ$]", fontsize=15)
 
     ax.set_xlim(0, 360)
+    ax.set_xticks([0, 45, 90, 135, 180, 225, 270, 315, 360])
+    
     fig.suptitle(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by Instrument")
 
-    ax.legend()
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)      
+    cbar = fig.colorbar(sm, ax=ax, boundaries=bounds, ticks=bounds, pad=0.01)
+    cbar.ax.set_yticks([i + 0.5 for i in range(ninst)])
+    cbar.ax.set_yticklabels(instrument_list)
 
     plt.savefig("./plots/overview_histo_instrument.png", dpi=200, bbox_inches="tight")
 
@@ -152,8 +165,6 @@ def plot_histo_schedule(config, weatherband, instrument):
     cbar = fig.colorbar(sm, ax=ax, pad=0.01)
 
     # Title
-    start_date = config['observations']['start_date']
-    end_date = config['observations']['end_date']
     missing_targets = f"./data_out/{start_date}_{end_date}_missing_targets.csv"
     if os.path.isfile(missing_targets):
         ax.set_title(f"Weatherband={weatherband} - Instrument={instrument}" + '\n' 
@@ -206,10 +217,10 @@ if __name__ == "__main__":
     config = load_config(config_path)
 
     plot_histo_instrument(config['data']['path'])
-    plot_histo_dec(config['data']['path'])
+    #plot_histo_dec(config['data']['path'])
 
     # Make plots for all weatherbands and instruments
-    inst_list = config['instruments']['instrument_list'] + ['All']
-    for wb in [1, 2, 3, 4, 5, 'All']:
-        for inst in inst_list:
-            plot_histo_schedule(config, weatherband=wb, instrument=inst)
+    #inst_list = config['instruments']['instrument_list'] + ['All']
+    #for wb in [1, 2, 3, 4, 5, 'All']:
+    #    for inst in inst_list:
+    #        plot_histo_schedule(config, weatherband=wb, instrument=inst)
