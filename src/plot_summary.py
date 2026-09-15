@@ -41,8 +41,8 @@ def plot_histo_instrument(fname):
 
     ax.set_xlim(0, 360)
     ax.set_xticks([0, 45, 90, 135, 180, 225, 270, 315, 360])
-    
-    fig.suptitle(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by Instrument")
+
+    ax.set_title(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by Instrument")
 
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)      
     cbar = fig.colorbar(sm, ax=ax, boundaries=bounds, ticks=bounds, pad=0.01)
@@ -80,7 +80,7 @@ def plot_histo_dec(fname):
     ax.set_xlim(0, 360)
     ax.set_xticks([0, 45, 90, 135, 180, 225, 270, 315, 360])
 
-    fig.suptitle(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by DEC")
+    ax.set_title(r"Distribution of RA in $10^\circ$ increments" + "\n" + "Seperated by DEC")
 
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)      
     cbar = fig.colorbar(sm, ax=ax, boundaries=bounds, ticks=bounds, pad=0.01)
@@ -88,6 +88,35 @@ def plot_histo_dec(fname):
 
     plt.savefig("./plots/overview_histo_ra.png", dpi=200, bbox_inches="tight")   
 
+# TODO: When different exposure times are added the total time will need adjusting
+def plot_histo_weatherband(fname):
+
+    df = load_csv(fname)
+
+    x_unique = df['weatherband'].unique()
+    x = np.sort(x_unique)
+    count = [int(df[df['weatherband'] == i]['remaining'].sum()) for i in x]
+
+    # Total number of hours remaining
+    if isinstance(config['observations']['exp_time'], int):
+        hours = [count[i] * config['observations']['exp_time'] / 3600 for i in range(len(count))]
+
+    norm = mcolors.Normalize(vmin=0, vmax=max(hours))
+    colors = cm.viridis(norm(hours))
+
+    fig, ax = plt.subplots(1,1, figsize=(8,6))
+
+    ax.bar(x, hours, color=colors, edgecolor='k', linewidth=0.8)
+
+    ax.set_xlabel("Weather bands", fontsize=12)
+    ax.set_ylabel("Total hours", fontsize=12)
+
+    sm = cm.ScalarMappable(cmap='viridis', norm=norm)
+    cbar = fig.colorbar(sm, ax=ax, pad=0.01)
+
+    ax.set_title("Distribution of requested weather bands")
+
+    plt.savefig("./plots/overview_histo_weatherbands.png", dpi=200, bbox_inches="tight")
 
 def plot_histo_schedule(config, weatherband, instrument):
 
@@ -217,10 +246,11 @@ if __name__ == "__main__":
     config = load_config(config_path)
 
     plot_histo_instrument(config['data']['path'])
-    #plot_histo_dec(config['data']['path'])
+    plot_histo_dec(config['data']['path'])
+    plot_histo_weatherband(config['data']['path'])
 
     # Make plots for all weatherbands and instruments
-    #inst_list = config['instruments']['instrument_list'] + ['All']
-    #for wb in [1, 2, 3, 4, 5, 'All']:
-    #    for inst in inst_list:
-    #        plot_histo_schedule(config, weatherband=wb, instrument=inst)
+    inst_list = config['instruments']['instrument_list'] + ['All']
+    for wb in [1, 2, 3, 4, 5, 'All']:
+        for inst in inst_list:
+            plot_histo_schedule(config, weatherband=wb, instrument=inst)
