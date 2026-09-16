@@ -8,7 +8,7 @@ observations:
   end_date: "2027-01-31"            # End data of observations
   start_time: "18:00"               # Start time for each observing day
   end_time: "06:00"                 # End time for each observing day
-  exp_time: 1800                    # Exposure time [seconds] per observation
+  exp_time: 1800                    # Default exposure time [seconds] per observation. Used when no exposure time in specified in input data
 
 telescope:
   observatory: "jcmt"               # Telescope where you are observing from

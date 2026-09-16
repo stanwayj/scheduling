@@ -24,10 +24,11 @@ Builds schedule from input data
 
 # This currently assumes lower values of ``tagpriority`` is higher priority
 # TODO: add tagadj overwriting tagpriority
-def construct_blocks(config, exposure_time, read_out_time):
+def construct_blocks(config):
 
     df = load_csv(config, remove_zeros=True)
-    
+    read_out_time = config['telescope']['read_out'] * u.second
+
     blocks = []
     weatherband = {}
     for index, row in df.iterrows():
@@ -39,6 +40,15 @@ def construct_blocks(config, exposure_time, read_out_time):
         dec = row['dec2000']
         n_scans = row['remaining']
         projectid = row['projectid']
+        
+        # Find exposure time from input data, or default value from config file
+        if 'exposure time' in df.columns:
+            exposure_time = row['exposure time'] * 60 * u.second
+            
+        elif isinstance(config['observations']['exp_time'], int):
+            exposure_time = config['observations']['exp_time'] * u.second
+        else:
+            raise TypeError("Cannot find exposure time! Add to input data or set a default value in configuration.yaml")  
 
         # Construct target object
         block_name = f'{projectid}_{targetid}'
@@ -212,12 +222,10 @@ def schedule(config):
     ## Global Constraints ##
     global_constraints = collect_global_constraints(config)
 
-    ## Exposure times and Observing Blocks ##
-    exp_time = config['observations']['exp_time'] * u.second
-    read_out = config['telescope']['read_out'] * u.second
-    blocks, weatherband = construct_blocks(config, exp_time, read_out)
+    ## Construct Observing Blocks ##
+    blocks, weatherband = construct_blocks(config)
 
-    ## Transitioner ##
+    ## Construct Transitioner ##
     transitioner = construct_transitioner(config)
 
     ## Priority Scheduler ##
