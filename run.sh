@@ -17,5 +17,5 @@ elif [[ "$option1" == *.yaml ]]; then
     python3 ./src/schedule.py "$option1"
     python3 ./src/plot_summary.py "$option1"    
 else
-    echo "The first command line argument must be ``clean'' or a yaml configuration file"
+    echo "The first command line argument must be ''clean'' or a yaml configuration file"
 fi
