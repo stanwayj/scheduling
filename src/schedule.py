@@ -22,8 +22,7 @@ WIP somewhat preliminary!
 Builds schedule from input data
 """
 
-# This currently assumes lower values of ``tagpriority`` is higher priority
-# TODO: add tagadj overwriting tagpriority
+# Construct observing blocks for each observation in the schedule
 def construct_blocks(config):
 
     df = load_csv(config, remove_zeros=True)
@@ -50,6 +49,12 @@ def construct_blocks(config):
         else:
             raise TypeError("Cannot find exposure time! Add to input data or set a default value in configuration.yaml")  
 
+        # Override priority if `tagadj` has been set
+        if 'tagadj' in df.columns and row['tagadj'] > 0:
+            priority = row['tagadj']
+        else:
+            priority = tagpriority
+
         # Construct target object
         block_name = f'{projectid}_{targetid}'
         target = FixedTarget(coord=SkyCoord(ra=ra*u.deg, dec=dec*u.deg), name=block_name)
@@ -57,11 +62,11 @@ def construct_blocks(config):
         # Construct observing block objects, split each scan into singular block
         if n_scans > 1:
             for n in range(n_scans):
-                b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, 1, read_out_time,
+                b = ObservingBlock.from_exposures(target, priority, exposure_time, 1, read_out_time,
                                                   configuration = {"Instrument": instrument})
                 blocks.append(b)     
         else:
-            b = ObservingBlock.from_exposures(target, tagpriority, exposure_time, 1, read_out_time,
+            b = ObservingBlock.from_exposures(target, priority, exposure_time, 1, read_out_time,
                                               configuration = {"Instrument": instrument})
             blocks.append(b)
 
@@ -265,3 +270,4 @@ if __name__ == "__main__":
     config = load_config(config_path)
 
     schedule(config)
+    #construct_blocks(config)
