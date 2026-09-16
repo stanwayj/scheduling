@@ -97,9 +97,13 @@ def plot_histo_weatherband(config):
     x = np.sort(x_unique)
     count = [int(df[df['weatherband'] == i]['remaining'].sum()) for i in x]
 
-    # Total number of hours remaining
-    if isinstance(config['observations']['exp_time'], int):
+    # Total number of hours remaining calculated from exposure time
+    if 'exposure time' in df.columns:
+        hours = [float((df[df['weatherband'] == i]['remaining'] * df[df['weatherband'] == i]['exposure time']).sum() / 60) for i in x]
+    elif isinstance(config['observations']['exp_time'], int):
         hours = [count[i] * config['observations']['exp_time'] / 3600 for i in range(len(count))]
+    else:
+        raise TypeError("Cannot find exposure time! Add to input data or set a default value in configuration.yaml") 
 
     norm = mcolors.Normalize(vmin=0, vmax=max(hours))
     colors = cm.viridis(norm(hours))
