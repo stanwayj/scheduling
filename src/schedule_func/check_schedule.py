@@ -1,4 +1,5 @@
 import pandas as pd
+import warnings
 
 from ..io import *
 
@@ -11,6 +12,10 @@ def check_schedule(config):
     end_date = config['observations']['end_date']
     fin = f"./data_out/{start_date}_{end_date}_schedule.csv" 
     df_schedule = load_schedule(config)
+    
+    # Raise warning is weatherband has not been saved to the schedule
+    if 'weather band' not in df_schedule.columns:
+        warnings.warn("Weather band not added to schedule but exists in input data.")
 
     # Returns a dictonary with the total number of scans planned per target.
     planned_targets = {}
