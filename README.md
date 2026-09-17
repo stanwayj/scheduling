@@ -17,4 +17,15 @@ $ conda env create -f environment.yaml
 $ conda activate schedule
 $ pip3 install -e .
 ```
-If this package is installed via conda you will have to enter the conda enviroment each time you would like to use the package.
+If this package is installed via conda you will have to enter the conda enviroment each time you would like to use the package. To enter the enviroment use the command:
+```bash
+$ conda activate schedule
+```
+To leave the enviroment afterwards, use the command:
+```bash
+$ conda deactivate
+```
+To remove the conda enviroment, use the command:
+```bash
+$ conda remove -n schedule --all
+```
