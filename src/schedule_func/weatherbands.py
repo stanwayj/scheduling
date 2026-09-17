@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # Add weatherband dictonary (from construct blocks) to schedule csv 
 def add_weather_bands(df, weatherband_dict, fout):

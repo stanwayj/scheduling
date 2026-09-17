@@ -1,6 +1,4 @@
-import matplotlib.pyplot as plt
 import pandas as pd
-import datetime
 import sys
 
 from src import *
@@ -13,10 +11,8 @@ from src.schedule_func.transition import *
 import astroplan
 from astroplan import Observer
 
-from astroplan.constraints import AtNightConstraint, AirmassConstraint, TimeConstraint, AltitudeConstraint, LocalTimeConstraint
-from astroplan.scheduling import Transitioner, PriorityScheduler, Schedule
+from astroplan.scheduling import PriorityScheduler, Schedule
 
-from astropy.coordinates import SkyCoord
 from astropy.time import Time
 import astropy.units as u
 
@@ -81,4 +77,3 @@ if __name__ == "__main__":
     config = load_config(config_path)
 
     schedule(config)
-    #construct_blocks(config)
