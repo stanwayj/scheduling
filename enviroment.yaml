@@ -1,0 +1,12 @@
+name: schedule
+
+channels:
+ - conda-forge
+
+dependencies:
+ - pip
+ - numpy
+ - pandas
+ - matplotlib
+ - astropy
+ - astroplan
