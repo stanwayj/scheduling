@@ -7,6 +7,7 @@ from src import *
 from src.schedule_func.blocks import *
 from src.schedule_func.check_schedule import *
 from src.schedule_func.global_constraints import *
+from src.schedule_func.weatherbands import *
 
 import astroplan
 from astroplan import Observer
@@ -22,24 +23,6 @@ import astropy.units as u
 WIP somewhat preliminary!
 Builds schedule from input data
 """
-
-# Add weatherband dictonary (from construct blocks) to schedule csv 
-def add_weather_bands(df, weatherband_dict, fout):
-
-    weatherband_list = []
-    for index, row in df.iterrows():
-        if row['target'] != "TransitionBlock":
-            instrument = row['configuration'].split("'")[3]
-            targetid = row['target']
-            projectid, target = targetid.split("_")
-        
-            key = f'{projectid}_{instrument}_{target}'      
-            weatherband_list.append(int(weatherband_dict[key]))
-        else:
-            weatherband_list.append(np.nan)
-
-    df['weather band'] = weatherband_list
-    df.to_csv(fout, index=False)
 
 # Add transition between instruments from config file
 def construct_transitioner(config):
