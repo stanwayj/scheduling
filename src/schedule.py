@@ -7,14 +7,7 @@ from src.schedule_func.check_schedule import *
 from src.schedule_func.global_constraints import *
 from src.schedule_func.weatherbands import *
 from src.schedule_func.transition import *
-
-import astroplan
-from astroplan import Observer
-
-from astroplan.scheduling import PriorityScheduler, Schedule
-
-from astropy.time import Time
-import astropy.units as u
+from src.schedule_func.construct_schedule import *
 
 """
 WIP somewhat preliminary!
@@ -23,13 +16,6 @@ Builds schedule from input data
 
 # TODO: Break schedule into smaller blocks (e.g. week long) to reduce RAM usage
 def schedule(config):
-
-    ## Observatory ##
-    observer = Observer.at_site(config['telescope']['observatory'])
-
-    ## Start and End dates ##
-    start_time = Time(config['observations']['start_date'] + " " + config['observations']['start_time'], format='iso')
-    end_time = Time(config['observations']['end_date'] + " " + config['observations']['end_time'], format='iso')
 
     ## Global Constraints ##
     global_constraints = collect_global_constraints(config)
@@ -40,19 +26,10 @@ def schedule(config):
     ## Construct Transitioner ##
     transitioner = construct_transitioner(config)
 
-    ## Priority Scheduler ##
-    time_resolution = config['misc']['time_resolution'] * u.second
-    prior_scheduler = PriorityScheduler(constraints = global_constraints,
-                                        observer = observer,
-                                        transitioner = transitioner,
-                                        time_resolution = time_resolution)
+    ## Construct schedule and return as a Dataframe ##
+    df_out = construct_schedule(config, global_constraints, transitioner, blocks)
 
-    priority_schedule = Schedule(start_time, end_time)
-    prior_scheduler(blocks, priority_schedule)
-
-    ## Convert to Pandas Dataframe and save as csv
-    df_out = priority_schedule.to_table().to_pandas()
-
+    ## Save schedule ## 
     start_date = config['observations']['start_date']
     end_date = config['observations']['end_date']
     fout = f"./data_out/{start_date}_{end_date}_schedule.csv"   
