@@ -40,15 +40,15 @@ def check_schedule(config):
         try:
             diff = value - scheduled_targets[key]
             if diff > 0:
-                
-                target_info = df_data.loc[df_data['target'] == key, ['instrument', 'ra2000', 'dec2000']]
+                target_info = df_data.loc[df_data['target'] == key.split("_")[1], ['instrument', 'ra2000', 'dec2000']]
                 target_info = target_info.iloc[0]
                 new_row = {'target':key, 'instrument':target_info['instrument'], 'ra2000':target_info['ra2000'],
-                        'dec2000':target_info['dec2000'], 'remaining':diff}
+                           'dec2000':target_info['dec2000'], 'remaining':diff}
                 df_missing = pd.concat([df_missing, pd.DataFrame([new_row])], ignore_index=True)
+                
         # Some may not be observed at all.     
         except:
-            target_info = df_data.loc[df_data['target'] == key, ['instrument', 'ra2000', 'dec2000', 'remaining']]
+            target_info = df_data.loc[df_data['target'] == key.split("_")[1], ['instrument', 'ra2000', 'dec2000', 'remaining']]
             remaining = target_info['remaining'].sum() 
             new_row = {'target':key, 'instrument':target_info['instrument'], 'ra2000':target_info['ra2000'],
                        'dec2000':target_info['dec2000'], 'remaining':remaining} 
