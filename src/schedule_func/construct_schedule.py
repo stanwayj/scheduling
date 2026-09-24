@@ -39,6 +39,21 @@ def construct_schedule(config, constraints, transitioner, blocks):
     return df
 """
 
+def get_block_signature(block):
+    """
+    Extracts a unique, hashable tuple signature for an ObservingBlock.
+    Survives multiprocessing serialization / pickling.
+    """
+    if hasattr(block, "target") and block.target is not None:
+        target_id = block.target.name
+    else:
+        target_id = str(block)
+        
+    duration_val = block.duration.value if hasattr(block.duration, "value") else str(block.duration)
+    priority_val = getattr(block, "priority", None)
+    
+    return (target_id, duration_val, priority_val)
+
 
 def chunk_blocks(blocks, num_chunks):
     """Splits a list of observing blocks into n roughly equal chunks."""
@@ -97,10 +112,10 @@ def parallel_priority_schedule(blocks, observer, start_time, end_time, transitio
 
     return schedules
 
-def merge_schedules(schedules, start_time=None, end_time=None, allow_overlaps=False):
+def merge_schedules(schedules, start_time=None, end_time=None, allow_overlaps=True):
     """
-    Merges multiple astroplan.scheduling.Schedule objects into a single master schedule
-    by directly populating the master_schedule.slots list attribute.
+    Merges multiple Schedule objects into a master schedule by constructing clean Slot
+    instances and assigning master_schedule.slots directly.
     """
     if not schedules:
         raise ValueError("At least one Schedule must be provided to merge.")
@@ -110,96 +125,71 @@ def merge_schedules(schedules, start_time=None, end_time=None, allow_overlaps=Fa
     if end_time is None:
         end_time = max(s.end_time for s in schedules)
 
-    # 1. Instantiate master schedule with boundaries
     master_schedule = Schedule(start_time, end_time)
 
-    # 2. Extract all non-empty occupied slots
+    # Collect occupied slots
     all_slots = []
     for sched in schedules:
         for slot in sched.slots:
             if slot.block is not None:
                 all_slots.append(slot)
 
-    # 3. Sort chronologically by start time
+    # Sort chronologically
     all_slots.sort(key=lambda s: s.start)
 
-    # 4. Check overlaps and construct fresh Slot instances
     merged_slots = []
     last_end_time = None
 
     for slot in all_slots:
         if last_end_time is not None and slot.start < last_end_time:
-            block_identifier = (
-                slot.block.target.name 
-                if hasattr(slot.block, "target") 
-                else str(slot.block)
-            )
-            msg = f"Overlap detected for '{block_identifier}' starting at {slot.start.iso}"
+            sig = get_block_signature(slot.block)
+            msg = f"Overlap detected for '{sig[0]}' starting at {slot.start.iso}"
             if not allow_overlaps:
                 raise ValueError(msg)
             else:
-                print(f"[Warning] {msg}")
-                continue
+                continue  # Skip conflicting overlapping slot
 
-        # Create clean Slot and attach block
+        # Construct new Slot instance and preserve block assignment
         new_slot = Slot(slot.start, slot.end)
         new_slot.block = slot.block
         merged_slots.append(new_slot)
         
         last_end_time = slot.end
 
-    # 5. Overwrite internal slot list directly
     master_schedule.slots = merged_slots
     return master_schedule
 
-def extract_unscheduled_blocks(original_blocks, schedule):
+def extract_unscheduled_blocks(original_blocks, master_schedule):
     """
-    Identifies unscheduled ObservingBlocks by matching unique attributes
-    (target name, priority, and duration) instead of Python object memory IDs.
+    Extracts unscheduled blocks by matching explicit integer block IDs.
     """
-    # Build a set of unique signatures for blocks present in the schedule
-    scheduled_signatures = set()
+    # Collect IDs of all blocks currently in the schedule
+    scheduled_ids = set()
+    for slot in master_schedule.slots:
+        if slot.block is not None and hasattr(slot.block, "block_id"):
+            scheduled_ids.add(slot.block.block_id)
+
+    # Return original blocks whose IDs are missing from scheduled_ids
+    unscheduled = [
+        block for block in original_blocks 
+        if getattr(block, "block_id", None) not in scheduled_ids
+    ]
     
-    for slot in schedule.slots:
-        if slot.block is not None:
-            block = slot.block
-            # Use target name + duration + priority as a unique identifier
-            if hasattr(block, "target") and block.target is not None:
-                sig = (block.target.name, block.duration, getattr(block, "priority", None))
-            else:
-                sig = (str(block), block.duration, getattr(block, "priority", None))
-            scheduled_signatures.add(sig)
-
-    # Filter out blocks from original_blocks that match scheduled signatures
-    unscheduled_blocks = []
-    for block in original_blocks:
-        if hasattr(block, "target") and block.target is not None:
-            sig = (block.target.name, block.duration, getattr(block, "priority", None))
-        else:
-            sig = (str(block), block.duration, getattr(block, "priority", None))
-            
-        if sig not in scheduled_signatures:
-            unscheduled_blocks.append(block)
-
-    return unscheduled_blocks
-
+    return unscheduled
 
 def fill_remaining_slots(master_schedule, unscheduled_blocks, observer, transitioner, time_resolution, constraints=None):
-    """
-    Runs a single-core PriorityScheduler pass to insert unscheduled blocks 
-    into remaining open slots of an existing master schedule.
-    """
-    # Initialize scheduler with constraints and observer
+    """Fills open slots in master_schedule with remaining blocks using a single core."""
+    if not unscheduled_blocks:
+        return master_schedule
+        
     secondary_scheduler = PriorityScheduler(
         constraints=constraints,
         observer=observer,
         transitioner=transitioner,
-        time_resolution = time_resolution
+        time_resolution=time_resolution
     )
-    
-    # Run the scheduler using the existing master_schedule as target
-    filled_schedule = secondary_scheduler(unscheduled_blocks, master_schedule)
-    return filled_schedule
+
+    return secondary_scheduler(unscheduled_blocks, master_schedule)
 
 
 def construct_schedule(config, constraints, transitioner, blocks):
@@ -211,11 +201,15 @@ def construct_schedule(config, constraints, transitioner, blocks):
 
     time_resolution = config['misc']['time_resolution'] * u.second
 
+    for idx, block in enumerate(blocks):
+        block.block_id = idx
+
     schedules = parallel_priority_schedule(blocks, observer, start_time, end_time, transitioner, time_resolution, constraints, 4)
     master_schedule = merge_schedules(schedules, allow_overlaps=True)
-    print(master_schedule)
+
     unscheduled_blocks = extract_unscheduled_blocks(blocks, master_schedule)
-    print(f"Unscheduled blocks remaining: {len(unscheduled_blocks)}")
+    print(f"Blocks scheduled in parallel: {len(blocks) - len(unscheduled_blocks)} / {len(blocks)}")
+    print(f"Unscheduled blocks remaining : {len(unscheduled_blocks)}")
 
     # 4. Fill remaining open gaps using a single-core pass
     final_schedule = fill_remaining_slots(
